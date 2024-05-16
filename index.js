@@ -1,85 +1,61 @@
-#! /usr/bin/env node
+#!/usr/bin/env node
 
 const prompts = require('prompts');
-const exec = require('await-exec')
-const fs = require('fs');
-const path = require('path')
-prompts.override(require('yargs').argv);
+const yargs = require('yargs');
+const integrateTailwind = require('./integrateTailwind');
+const updateTailwindConfig = require('./updateTailwindConfig');
+const updateGlobals = require('./updateGlobals');
 
-const integrateTailwind = async (framework) => {
-    if (framework === 'Next.js') {
-        await exec('npm install -D tailwindcss postcss autoprefixer')
-        await exec('npx tailwindcss init -p')
+prompts.override(yargs.argv);
 
-    }
-}
-
-const updateTailwindConfig = async () => {
-    const webpackConfigFile = require(path.resolve(process.cwd(), 'tailwind.config'));
-    webpackConfigFile.content = [
-        "./app/**/*.{js,ts,jsx,tsx,mdx}",
-        "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-        "./components/**/*.{js,ts,jsx,tsx,mdx}",
-
-        // Or if using `src` directory:
-        "./src/**/*.{js,ts,jsx,tsx,mdx}",
-    ]
-    const updatedConfig = `module.exports = ${JSON.stringify(webpackConfigFile, null, 2)};\n`;
-
-
-    fs.writeFileSync(path.resolve(process.cwd(), 'tailwind.config.js'), updatedConfig, 'utf8');
-}
-
-const updateGlobals = async () => {
-    const cssFilePath = path.resolve(process.cwd(), 'src/app/globals.css');
-
-    // Lines to add
-    const linesToAdd = `@tailwind base;
-@tailwind components;
-@tailwind utilities;
-`;
-
-    // Read the content of the CSS file
-    fs.readFile(cssFilePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading file:', err);
-            return;
-        }
-
-        // Manipulate the content of the CSS file
-        const lines = data.split('\n');
-        lines.splice(0, 0, linesToAdd);
-        const newContent = lines.join('\n');
-
-        // Write the modified content back to the file
-        fs.writeFile(cssFilePath, newContent, 'utf8', (err) => {
-            if (err) {
-                console.error('Error writing file:', err);
-                return;
-            }
-            console.log('Lines added successfully.');
-        });
-    });
-}
-
-(async () => {
-    const response = await prompts({
+const promptFrameworkSelection = async () => {
+    return prompts({
         type: 'select',
         name: 'framework',
-        message: 'Which framework would you like to integrate tailwind with?',
+        message: 'Which framework would you like to integrate Tailwind with?',
         choices: [
             { title: 'Next.js', value: 'Next.js' },
-            { title: 'Green', value: '#00ff00' },
-            { title: 'Blue', value: '#0000ff' }
+            { title: 'Vite-React', value: 'Vite-React' },
+            { title: 'Vite-Vue', value: 'Vite-Vue' },
+            { title: 'Vite-Svelte', value: 'Vite-Svelte' },
+            { title: 'Nuxt', value: 'Nuxt' },
+            { title: 'Gatsby', value: 'Gatsby' },
+            { title: 'SolidJS', value: 'SolidJS' },
+            { title: 'Angular', value: 'Angular' },
         ],
-
     });
-    const { framework } = response
-    await integrateTailwind(framework)
-    await updateTailwindConfig()
-    await updateGlobals()
+};
 
-})();
+const main = async () => {
+    try {
+        const { framework } = await promptFrameworkSelection();
 
+        if (!framework) {
+            console.log('No framework selected. Exiting...');
+            process.exit(1);
+        }
 
+        console.log(`Integrating Tailwind CSS with ${framework}...`);
+        await integrateTailwind(framework);
 
+        if (framework !== 'Nuxt' && framework !== 'Astro') {
+            console.log(`Updating Tailwind config for ${framework}...`);
+            await updateTailwindConfig(framework);
+            console.log(`Updating global styles for ${framework}...`);
+            await updateGlobals(framework);
+        }
+
+        console.log(`Tailwind CSS successfully integrated with ${framework}.`);
+    } catch (error) {
+        console.error('An error occurred:', error);
+        process.exit(1);
+    }
+};
+
+// Handle user interruption (e.g., Ctrl+C)
+process.on('SIGINT', () => {
+    console.log('Process interrupted. Exiting...');
+    process.exit(0);
+});
+
+main();

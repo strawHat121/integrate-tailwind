@@ -1,19 +1,23 @@
 {
-  "name": "integrate-tailwind",
-  "version": "1.0.0",
-  "description": "npm package to easily integrate tailwind into your project",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "bin": {
-    "integrate-tailwind": "./index.js"
-  },
-  "author": "strawHat121",
-  "license": "MIT",
-  "dependencies": {
-    "await-exec": "^0.1.2",
-    "prompts": "^2.4.2",
-    "yargs": "^17.7.2"
-  }
+    "name": "integrate-tailwind",
+    "version": "1.0.0",
+    "description": "npm package to easily integrate tailwind into your project",
+    "main": "index.js",
+    "scripts": {
+        "format": "prettier --write .",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "bin": {
+        "integrate-tailwind": "./index.js"
+    },
+    "author": "strawHat121",
+    "license": "MIT",
+    "dependencies": {
+        "await-exec": "^0.1.2",
+        "prompts": "^2.4.2",
+        "yargs": "^17.7.2"
+    },
+    "devDependencies": {
+        "prettier": "^3.2.5"
+    }
 }
